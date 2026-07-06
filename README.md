@@ -511,7 +511,7 @@ Second call, after the agent uses its LLM to generate queries:
 
 ```json
 {
-  "problem": "考虑一个问题：一个公司有10个男人...产出为c(x,y)=x^2*y，请问应该如何分配",
+  "problem": "考虑一个问题：...请问应该如何分配",
   "suggested_queries": [
     "positive assortative matching supermodular surplus assignment problem",
     "Monge array assignment problem optimal matching",
