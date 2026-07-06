@@ -1,0 +1,25 @@
+{
+  "name": "kb-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "kb-mcp-ts": "tsx src-ts/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "tsx --test tests/*.test.ts",
+    "test:incremental": "KB_MCP_DUCKDB_PATH=data/test_outputs/incremental-kb.duckdb tsx scripts/incremental-ingest-test.ts",
+    "create-document": "tsx scripts/create-document.ts",
+    "smoke:pdf": "tsx scripts/smoke-test-pdf.ts"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "^1.5.4-r.1",
+    "@modelcontextprotocol/client": "^2.0.0-beta.1",
+    "@modelcontextprotocol/server": "^2.0.0-beta.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
