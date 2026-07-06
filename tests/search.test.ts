@@ -92,7 +92,7 @@ describe('extractQueryTerms', () => {
     const analysis = extractQueryTerms('最优运输');
 
     assert.deepEqual(analysis.key_terms, ['最优', '优运', '运输', '最优运', '优运输']);
-    assert.ok(analysis.warnings.some(message => message.includes('No English or math-symbol query terms')));
+    assert.ok(analysis.warnings.some(message => message.includes('No English or technical-symbol query terms')));
   });
 
   it('reports no usable terms for punctuation-only queries', () => {
@@ -256,7 +256,7 @@ describe('buildResearchContextItems', () => {
       evidenceTextTokens: 100,
       includeBooks: true,
       includePapers: true,
-      includeTheorems: true,
+      includeTerms: true,
     });
 
     assert.equal(context.items.length, 1);
@@ -268,7 +268,7 @@ describe('buildResearchContextItems', () => {
 });
 
 describe('extractTechnicalResults', () => {
-  it('extracts theorem-like headers without treating prose references as results', () => {
+  it('extracts technical-term headers without treating prose references as results', () => {
     const localDocuments: DocumentRecord[] = [
       {
         doc_id: 'paper-tech',

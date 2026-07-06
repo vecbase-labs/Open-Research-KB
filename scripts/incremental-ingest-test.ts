@@ -9,7 +9,7 @@ const secondPdfPath = path.resolve('data/test_outputs/incremental-second.pdf');
 async function resolveOtPdfPath() {
   const candidate = process.env.KB_MCP_SMOKE_PDF ?? process.argv[2];
   if (!candidate) {
-    throw new Error('Set KB_MCP_SMOKE_PDF=/absolute/path/to/sample.pdf or pass a PDF path as the first argument.');
+    throw new Error('Set KB_MCP_SMOKE_PDF=<path-to-sample.pdf> or pass a PDF path as the first argument.');
   }
   const pdfPath = path.resolve(candidate);
   try {

@@ -28,13 +28,13 @@ npm run kb-mcp-ts
 Add a PDF:
 
 ```bash
-npm run create-document -- '{"pdf_path":"/absolute/path/book.pdf","title":"Book Title","authors":["Author"],"tags":["book"],"ocr":"auto"}'
+npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title","authors":["Author"],"tags":["book"],"ocr":"auto"}'
 ```
 
 Run the optional smoke test with any searchable sample PDF:
 
 ```bash
-KB_MCP_SMOKE_PDF=/absolute/path/to/sample.pdf npm run smoke:pdf
+KB_MCP_SMOKE_PDF=<path-to-sample.pdf> npm run smoke:pdf
 ```
 
 ## Codex MCP Setup
@@ -52,7 +52,7 @@ A fresh install starts with a default database named `default`, stored at `data/
 ## Common Workflow
 
 1. Add PDFs with `create_document` or `ingest_pdf`.
-2. Search the corpus with `search` or `search_math_problem`.
+2. Search the corpus with `search` or `search_terms`.
 3. Inspect source evidence with `get_chunk`, `get_page_text`, or `get_page_image`.
 4. Answer from the corpus only when `answerability.status` is `supported`.
 5. If evidence is weak or missing, label any independent reasoning clearly and use `check_reasonable` when a closed corpus profile should constrain the answer.
@@ -68,10 +68,10 @@ A fresh install starts with a default database named `default`, stored at `data/
 | `ingest_pdf` | Ingest a local PDF into a selected database. |
 | `list_documents` | List indexed documents with optional title/path/tag filters. |
 | `search` | Search chunks and return answerability metadata. |
-| `search_math_problem` | Two-stage search workflow for math/technical natural-language questions. |
+| `search_terms` | Two-stage search workflow for technical/domain natural-language questions. |
 | `check_reasonable` | Check whether independent reasoning stays within a selected corpus scope. |
-| `build_technical_index` | Preview or build theorem-like extracted technical results. |
-| `search_technical_results` | Search theorem-like extracted results and nearby definitions. |
+| `build_technical_index` | Preview or build extracted technical-term results. |
+| `search_technical_results` | Search extracted technical-term results and nearby definitions. |
 | `get_chunk` | Fetch one chunk with optional neighbors and page image. |
 | `get_page_text` | Return extracted text for one PDF page. |
 | `get_page_image` | Render or fetch a cached page image. |

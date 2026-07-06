@@ -760,7 +760,7 @@ export async function search(input: {
         evidenceTextTokens: input.evidence_text_tokens ?? 900,
         includeBooks: true,
         includePapers: true,
-        includeTheorems: true,
+        includeTerms: true,
       }).items,
     }),
     answerability: {
@@ -777,7 +777,7 @@ export async function search(input: {
   });
 }
 
-export async function searchMathProblem(input: {
+export async function searchTerms(input: {
   db_name?: string | null;
   problem: string;
   suggested_queries?: string[];
@@ -795,8 +795,8 @@ export async function searchMathProblem(input: {
   max_evidence_pages?: number;
   include_books?: boolean;
   include_papers?: boolean;
-  include_theorems?: boolean;
-  theorem_top_k?: number;
+  include_terms?: boolean;
+  term_top_k?: number;
   include_index_hits?: boolean;
   strict?: boolean;
   candidate_solution?: string;
@@ -813,22 +813,22 @@ export async function searchMathProblem(input: {
       requires_llm_rewrite: true,
       original_problem: input.problem,
       results: [],
-      message: 'The MCP server does not semantically rewrite natural-language math problems. The agent should use its LLM capability to generate search queries, then call this tool again with suggested_queries.',
+      message: 'The MCP server does not semantically rewrite natural-language technical or domain-specific questions. The agent should use its LLM capability to generate search queries, then call this tool again with suggested_queries.',
       rewrite_instructions: [
-        'First infer the latent mathematical structure behind the user problem: state variables, types, messages, histories, beliefs, feasible actions, constraints, and objective.',
-        'Identify any hidden stochastic process, feasibility condition, theorem type, or standard technical object that may govern the problem, such as posterior martingales, Bayes plausibility, splitting lemmas, filtrations, convexity, fixed points, duality, monotonicity, or comparative statics.',
-        'Generate 3-5 concise English/math search queries that mix surface-topic terms with technical-mathematical terms.',
-        'Also generate theorem-search terms: theorem, proposition, lemma, definition, characterization, necessary and sufficient, equilibrium existence, incentive compatibility, Bayes plausibility, posterior martingale, privacy constraint, verifiable disclosure, hard evidence, unraveling.',
-        'For custom economic theory problems, first sketch the likely mathematical model class in keywords, then include those keywords in the search queries.',
+        'First infer the latent technical structure behind the user problem: state variables, types, messages, histories, beliefs, feasible actions, constraints, and objective.',
+        'Identify any hidden stochastic process, feasibility condition, result type, definition, or standard technical object that may govern the problem, such as posterior martingales, Bayes plausibility, splitting lemmas, filtrations, convexity, fixed points, duality, monotonicity, or comparative statics.',
+        'Generate 3-5 concise English/technical search queries that mix surface-topic terms with technical terms.',
+        'Also generate term-search terms: theorem, proposition, lemma, definition, characterization, necessary and sufficient, equilibrium existence, incentive compatibility, Bayes plausibility, posterior martingale, privacy constraint, verifiable disclosure, hard evidence, unraveling.',
+        'For custom economic theory problems, first sketch the likely model class in keywords, then include those keywords in the search queries.',
         'Include exact formulas, named structures, and inferred technical objects when useful.',
-        'Do not answer the math problem yet; only generate retrieval queries.',
+        'Do not answer the technical or domain-specific question yet; only generate retrieval queries.',
       ],
       iterative_retrieval_policy: {
         can_refine_and_search_again: true,
         requires_user_permission_for_independent_reasoning: true,
         instructions: [
-          'The agent may use later evidence packets returned by this tool to refine the query set and call search_math_problem again.',
-          'Query refinement is retrieval work, not independent mathematical reasoning.',
+          'The agent may use later evidence packets returned by this tool to refine the query set and call search_terms again.',
+          'Query refinement is retrieval work, not independent domain reasoning.',
           'Do not present a final answer from weak or technical-tool evidence unless answerability.status becomes supported or the user explicitly allows independent reasoning.',
         ],
       },
@@ -889,14 +889,14 @@ export async function searchMathProblem(input: {
     evidenceTextTokens: input.evidence_text_tokens ?? 900,
     includeBooks: input.include_books ?? true,
     includePapers: input.include_papers ?? true,
-    includeTheorems: input.include_theorems ?? true,
+    includeTerms: input.include_terms ?? true,
   });
-  const theoremTopK = input.theorem_top_k ?? Math.max(5, Math.min(12, perQueryTopK));
-  const technicalQueryResults = input.include_theorems ?? true
+  const termTopK = input.term_top_k ?? Math.max(5, Math.min(12, perQueryTopK));
+  const technicalQueryResults = input.include_terms ?? true
     ? await collectTechnicalSearchResults({
       dbName: input.db_name ?? null,
       queries: suggestedQueries,
-      topK: theoremTopK,
+      topK: termTopK,
       includeText: input.include_text ?? true,
     })
     : [];
@@ -909,7 +909,7 @@ export async function searchMathProblem(input: {
     contextItems: researchContext.items,
     technicalItems,
     maxItems,
-    includeTheorems: input.include_theorems ?? true,
+    includeTerms: input.include_terms ?? true,
   });
   const suggestedFollowupQueries = buildFollowupQueries(input.problem, suggestedQueries, combinedContext.items);
   const methodCheckQueries = (input.method_check_queries ?? []).map(query => query.trim()).filter(Boolean);
@@ -983,7 +983,7 @@ export async function searchMathProblem(input: {
     grouped_items: combinedContext.grouped_items,
     item_policy: {
       purpose: 'Use these items as an evidence packet for later reasoning. Do not treat technical_tool, background, or weak_related items as direct support for a final answer.',
-      evidence_grades: ['direct_model_primitive', 'theorem_or_result', 'technical_tool', 'background', 'weak_related'],
+      evidence_grades: ['direct_model_primitive', 'term_or_result', 'technical_tool', 'background', 'weak_related'],
       answerability_contributions: ['direct_support', 'helps_formalize', 'only_background'],
     },
     iterative_retrieval_policy: {
@@ -1012,19 +1012,19 @@ export async function searchMathProblem(input: {
     retrieval_diagnostics: {
       per_query_top_k: perQueryTopK,
       max_items: input.max_items ?? (retrievalProfile === 'strict_evidence' ? input.top_k ?? 8 : 20),
-      theorem_top_k: theoremTopK,
+      term_top_k: termTopK,
       technical_result_items: technicalItems.length,
-      theorem_items_returned: combinedContext.items.filter((item: Record<string, any>) => item.item_type === 'technical_result').length,
+      term_items_returned: combinedContext.items.filter((item: Record<string, any>) => item.item_type === 'technical_result').length,
       deduplicate_by: input.deduplicate_by ?? 'page',
       min_items_if_available: input.min_items_if_available ?? (retrievalProfile === 'strict_evidence' ? 0 : 12),
       include_books: input.include_books ?? true,
       include_papers: input.include_papers ?? true,
-      include_theorems: input.include_theorems ?? true,
+      include_terms: input.include_terms ?? true,
       include_index_hits: input.include_index_hits ?? false,
       index_hits_note: input.include_index_hits ? 'Index/table-of-contents extraction is not implemented yet; returned items are chunk/page retrieval hits.' : undefined,
     },
     evidence_pages: evidencePages,
-    message: searchMathProblemMessage(finalWorkflowStatus, supportType),
+    message: searchTermsMessage(finalWorkflowStatus, supportType),
   });
   });
 }
@@ -2854,7 +2854,7 @@ export function buildResearchContextItems(input: {
   evidenceTextTokens: number;
   includeBooks: boolean;
   includePapers: boolean;
-  includeTheorems: boolean;
+  includeTerms: boolean;
 }) {
   const candidates: Array<Record<string, any>> = [];
   const seen = new Set<string>();
@@ -2943,7 +2943,7 @@ async function collectTechnicalSearchResults(input: {
   for (const query of input.queries) {
     outputs.push(await searchTechnicalResults({
       db_name: input.dbName,
-      query: theoremSearchQuery(query),
+      query: termSearchQuery(query),
       doc_kind: 'all',
       result_types: ['theorem', 'proposition', 'lemma', 'corollary', 'claim', 'definition', 'assumption'],
       top_k: input.topK,
@@ -2957,7 +2957,7 @@ async function collectTechnicalSearchResults(input: {
   return outputs;
 }
 
-function theoremSearchQuery(query: string) {
+function termSearchQuery(query: string) {
   const technicalTerms = [
     'theorem',
     'proposition',
@@ -2993,7 +2993,7 @@ function buildTechnicalEvidenceItems(input: {
       items.push({
         item_id: 0,
         item_type: 'technical_result',
-        evidence_grade: 'theorem_or_result',
+        evidence_grade: 'term_or_result',
         answerability_contribution: 'helps_formalize',
         group: 'technical_tools',
         doc_kind: result.doc_kind,
@@ -3070,15 +3070,15 @@ function mergeEvidenceItems(input: {
   contextItems: Array<Record<string, any>>;
   technicalItems: Array<Record<string, any>>;
   maxItems: number;
-  includeTheorems: boolean;
+  includeTerms: boolean;
 }) {
-  const theoremQuota = input.includeTheorems ? Math.min(input.technicalItems.length, Math.max(0, Math.min(6, Math.floor(input.maxItems * 0.3)))) : 0;
-  const selectedTechnical = input.technicalItems.slice(0, theoremQuota);
+  const termQuota = input.includeTerms ? Math.min(input.technicalItems.length, Math.max(0, Math.min(6, Math.floor(input.maxItems * 0.3)))) : 0;
+  const selectedTechnical = input.technicalItems.slice(0, termQuota);
   const selectedKeys = new Set(selectedTechnical.map(item => item.result_id ?? `${item.doc_id}:${item.page}:${item.result_label}`));
   const remainingSlots = Math.max(0, input.maxItems - selectedTechnical.length);
   const selectedContext = input.contextItems.slice(0, remainingSlots);
   const overflowTechnical = input.technicalItems
-    .slice(theoremQuota)
+    .slice(termQuota)
     .filter(item => !selectedKeys.has(item.result_id ?? `${item.doc_id}:${item.page}:${item.result_label}`));
   const combined: Array<Record<string, any>> = [...selectedContext, ...selectedTechnical, ...overflowTechnical]
     .slice(0, input.maxItems)
@@ -3090,7 +3090,7 @@ function mergeEvidenceItems(input: {
       papers: combined.filter(item => item.group === 'papers'),
       books_or_textbooks: combined.filter(item => item.group === 'books_or_textbooks'),
       technical_tools: combined.filter(item => item.group === 'technical_tools'),
-      theorems_or_results: combined.filter(item => item.item_type === 'technical_result'),
+      terms_or_results: combined.filter(item => item.item_type === 'technical_result'),
       weak_related: combined.filter(item => item.group === 'weak_related'),
     },
   };
@@ -3103,12 +3103,12 @@ function whyTechnicalResultRelevant(result: Record<string, any>) {
     ...(result.matched_terms ?? []),
     ...(result.nearby_terms ?? []),
   ].filter(Boolean).slice(0, 12).join(', ');
-  return `This extracted ${result.result_type ?? 'technical result'} matches theorem/result-level search fields (${fields}). It may provide a formal definition, proposition, lemma, or characterization useful for modeling or proving part of the custom problem.`;
+  return `This extracted ${result.result_type ?? 'technical result'} matches term/result-level search fields (${fields}). It may provide a formal definition, proposition, lemma, or characterization useful for modeling or proving part of the custom problem.`;
 }
 
 function howToUseTechnicalResult(result: Record<string, any>) {
   const label = result.result_label ?? result.result_type ?? 'technical result';
-  return `Use ${label} as a theorem-level tool candidate. Check its assumptions (${result.assumption_text ?? 'not automatically identified'}) and conclusion (${result.conclusion_text ?? 'not automatically identified'}) before applying it to the custom model.`;
+  return `Use ${label} as a term-level tool candidate. Check its assumptions (${result.assumption_text ?? 'not automatically identified'}) and conclusion (${result.conclusion_text ?? 'not automatically identified'}) before applying it to the custom model.`;
 }
 
 export function buildFollowupQueries(problem: string, previousQueries: string[], items: Array<Record<string, any>>) {
@@ -3225,7 +3225,7 @@ function howToUseForReasoning(grade: string, matchedTerms: string[]) {
 function researchItemRank(item: Record<string, any>) {
   const gradeWeight: Record<string, number> = {
     direct_model_primitive: 4,
-    theorem_or_result: 3.5,
+    term_or_result: 3.5,
     technical_tool: 3,
     background: 2,
     weak_related: 1,
@@ -3270,7 +3270,7 @@ export function extractQueryTerms(query: string): QueryAnalysis {
   terms.push(...cjkTerms);
   if (key_terms.length === 0 && cjkTerms.length > 0) {
     key_terms.push(...cjkTerms);
-    warnings.push('No English or math-symbol query terms were extracted; using CJK bigram/trigram terms for lexical search.');
+    warnings.push('No English or technical-symbol query terms were extracted; using CJK bigram/trigram terms for lexical search.');
   } else if (containsCjk(normalized) && cjkTerms.length === 0) {
     warnings.push('Chinese text was present, but no CJK search terms could be extracted.');
   }
@@ -3512,7 +3512,7 @@ function methodEvidenceFromQueryResult(result: Record<string, any>) {
   return null;
 }
 
-function searchMathProblemMessage(status: KbStatus, supportType: 'direct_evidence' | 'method_guided_corpus_check' | 'none' = 'none') {
+function searchTermsMessage(status: KbStatus, supportType: 'direct_evidence' | 'method_guided_corpus_check' | 'none' = 'none') {
   if (status === 'supported') {
     if (supportType === 'method_guided_corpus_check') {
       return 'The original problem was not directly solved by a corpus source. The candidate solution methods were checked against the selected knowledge base, so the agent may answer only with clearly labeled independent/method-guided reasoning and must state that no direct KB answer was found.';

@@ -30,6 +30,6 @@ General workflow:
 
 ## Recommended Tool Flow
 
-For natural-language math or technical questions, use `search_math_problem` first. Generate a small set of focused search queries that include both surface topic terms and the underlying technical objects or methods. For keyword lookups, use `search`. For source verification, use `get_chunk`, `get_page_text`, or `get_page_image`.
+For natural-language technical or domain-specific questions, use `search_terms` first. Generate a small set of focused search queries that include both surface topic terms and the underlying technical objects or methods. For keyword lookups, use `search`. For source verification, use `get_chunk`, `get_page_text`, or `get_page_image`.
 
 Use `check_reasonable` when an independent answer should be audited against a closed corpus profile.

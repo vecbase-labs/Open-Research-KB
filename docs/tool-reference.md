@@ -10,7 +10,7 @@ Every tool output includes the physical knowledge-base identity:
 {
   "knowledge_base": {
     "name": "default",
-    "duckdb_path": "/absolute/path/data/index/kb_default.duckdb"
+    "duckdb_path": "<path-to-data>/index/kb_default.duckdb"
   }
 }
 ```
@@ -58,7 +58,7 @@ Input:
 ```json
 {
   "db_name": "textbook_corpus",
-  "path": "/absolute/path/to/pdf-directory-or-file",
+  "path": "<path-to-pdf-directory-or-file>",
   "tags": ["textbook"],
   "ocr": "auto",
   "ocr_language": "eng",
@@ -90,7 +90,7 @@ Output:
   "databases": [
     {
       "name": "default",
-      "duckdb_path": "/absolute/path/data/index/kb_default.duckdb",
+      "duckdb_path": "<path-to-data>/index/kb_default.duckdb",
       "profile": {
         "scope_policy": "open_research",
         "method_boundary": "open_with_citations",
@@ -292,7 +292,7 @@ Default search is deliberately conservative. `answerability.status` is fixed to 
 
 Ranking uses BM25 over indexed chunks. The implementation extracts query terms, filters common stopwords, computes document frequency over the filtered chunk set, and scores matches with `k1 = 1.5` and `b = 0.75`. BM25 controls ranking only; the `strict` evidence gate still controls whether the tool may return anything at all.
 
-Chinese queries are handled lexically. If the query contains English or math-symbol terms, those remain the main key terms and CJK bigram/trigram terms are added as auxiliary search terms. If no English or math-symbol terms can be extracted, the server uses continuous CJK bigram/trigram terms as key terms and returns a warning. If no usable terms can be extracted at all, the response returns `not_found` with a warning instead of silently running a meaningless search.
+Chinese queries are handled lexically. If the query contains English or technical-symbol terms, those remain the main key terms and CJK bigram/trigram terms are added as auxiliary search terms. If no English or technical-symbol terms can be extracted, the server uses continuous CJK bigram/trigram terms as key terms and returns a warning. If no usable terms can be extracted at all, the response returns `not_found` with a warning instead of silently running a meaningless search.
 
 After BM25, the server grades the evidence:
 
@@ -412,9 +412,9 @@ When only partial terms are found, the tool reports partial evidence but does no
 }
 ```
 
-### `search_math_problem`
+### `search_terms`
 
-Two-stage workflow for natural-language math problems, especially Chinese descriptions whose useful search terms require mathematical interpretation. The MCP server does not call an LLM itself. Instead, it asks the connected agent to use its own model capability to infer both the surface topic and the latent mathematical structure, generate search queries, then searches those queries locally.
+Two-stage workflow for natural-language technical or domain-specific questions, especially descriptions whose useful search terms require domain interpretation. The MCP server does not call an LLM itself. Instead, it asks the connected agent to use its own model capability to infer both the surface topic and the latent technical structure, generate search queries, then searches those queries locally.
 
 First call, without `suggested_queries`:
 
@@ -436,11 +436,11 @@ Output:
   "workflow_status": "needs_query_rewrite",
   "requires_llm_rewrite": true,
   "results": [],
-  "message": "The MCP server does not semantically rewrite natural-language math problems. The agent should use its LLM capability to generate search queries, then call this tool again with suggested_queries.",
+  "message": "The MCP server does not semantically rewrite natural-language technical or domain-specific questions. The agent should use its LLM capability to generate search queries, then call this tool again with suggested_queries.",
   "rewrite_instructions": [
-    "First infer the latent mathematical structure behind the user problem: state variables, types, messages, histories, beliefs, feasible actions, constraints, and objective.",
-    "Identify any hidden stochastic process, feasibility condition, theorem type, or standard technical object that may govern the problem, such as posterior martingales, Bayes plausibility, splitting lemmas, filtrations, convexity, fixed points, duality, monotonicity, or comparative statics.",
-    "Generate 3-5 concise English/math search queries that mix surface-topic terms with technical-mathematical terms.",
+    "First infer the latent technical structure behind the user problem: state variables, types, messages, histories, beliefs, feasible actions, constraints, and objective.",
+    "Identify any hidden stochastic process, feasibility condition, result type, definition, or standard technical object that may govern the problem, such as posterior martingales, Bayes plausibility, splitting lemmas, filtrations, convexity, fixed points, duality, monotonicity, or comparative statics.",
+    "Generate 3-5 concise English/technical search queries that mix surface-topic terms with technical terms.",
     "Include exact formulas, named structures, and inferred technical objects when useful."
   ]
 }
