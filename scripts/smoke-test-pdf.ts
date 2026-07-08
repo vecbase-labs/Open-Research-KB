@@ -72,7 +72,7 @@ async function main() {
   try {
     const { tools } = await client.listTools();
     const toolNames = tools.map(tool => tool.name);
-    const expected = ['create_db', 'list_db', 'set_active_db', 'create_document', 'ingest_pdf', 'list_documents', 'search', 'search_terms', 'check_reasonable', 'build_technical_index', 'search_technical_results', 'get_chunk', 'get_page_text', 'get_page_image'];
+    const expected = ['create_db', 'create_db_from_exist', 'list_db', 'set_active_db', 'create_document', 'ingest_pdf', 'list_documents', 'search', 'search_terms', 'check_reasonable', 'build_technical_index', 'search_technical_results', 'get_chunk', 'get_page_text', 'get_page_image'];
     if (toolNames.join(',') !== expected.join(',')) throw new Error(`Unexpected tools: ${toolNames.join(',')}`);
     report.registered_tools = toolNames;
 

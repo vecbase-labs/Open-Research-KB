@@ -21,7 +21,9 @@ const catalogPath = process.env.KB_MCP_CATALOG_PATH
   ? path.resolve(process.env.KB_MCP_CATALOG_PATH)
   : path.join(indexDir, 'db_catalog.json');
 const defaultDbName = process.env.KB_MCP_DEFAULT_DB_NAME || 'default';
-const reservedDbNames = new Set(['kb']);
+const reservedDbNames = new Set(['kb', 'openshelf', 'all', 'union']);
+const requiredKnowledgeBaseTables = ['documents', 'pages', 'chunks', 'chunk_terms', 'embedding_jobs', 'semantic_index'];
+const optionalKnowledgeBaseTables = ['technical_results', 'technical_result_links'];
 
 const pdftotext = process.env.KB_MCP_PDFTOTEXT ?? 'pdftotext';
 const pdftoppm = process.env.KB_MCP_PDFTOPPM ?? 'pdftoppm';
@@ -505,7 +507,7 @@ export async function createDb(input: {
   const sourcePath = input.path ? path.resolve(input.path) : null;
   const name = normalizeDbName(input.db_name || (sourcePath ? path.basename(sourcePath) : `kb-${new Date().toISOString().slice(0, 10)}`));
   if (!name) throw new Error('db_name could not be inferred. Provide db_name explicitly.');
-  if (reservedDbNames.has(name) || name === 'all' || name === 'union') throw new Error(`Reserved db_name: ${name}. Use a concrete knowledge-base name such as default, research_corpus, or textbook_corpus.`);
+  if (reservedDbNames.has(name)) throw new Error(`Reserved db_name: ${name}. Use a concrete knowledge-base name such as default, research_corpus, or textbook_corpus.`);
   const catalog = await readDbCatalog();
   if (catalog.some(entry => entry.name === name)) throw new Error(`Knowledge base already exists: ${name}`);
   const dbPath = path.join(path.dirname(catalogPath), `kb_${name}.duckdb`);
@@ -565,6 +567,63 @@ export async function createDb(input: {
     },
     ingested_documents,
     rejected_documents,
+  };
+}
+
+export async function createDbFromExist(input: {
+  db_name?: string | null;
+  duckdb_path: string;
+  source_path?: string | null;
+  tags?: string[];
+}) {
+  await ensureDirs();
+  const existingPath = path.isAbsolute(input.duckdb_path)
+    ? input.duckdb_path
+    : path.resolve(root, input.duckdb_path);
+  const stat = await fs.stat(existingPath);
+  if (!stat.isFile()) throw new Error(`duckdb_path is not a file: ${existingPath}`);
+
+  const inferredName = path.basename(existingPath, path.extname(existingPath)).replace(/^kb[_-]/i, '');
+  const name = normalizeDbName(input.db_name || inferredName);
+  if (!name) throw new Error('db_name could not be inferred. Provide db_name explicitly.');
+  if (reservedDbNames.has(name)) throw new Error(`Reserved db_name: ${name}. Use a concrete knowledge-base name such as default, research_corpus, or textbook_corpus.`);
+
+  const catalog = await readDbCatalog();
+  if (catalog.some(entry => entry.name === name)) throw new Error(`Knowledge base already exists: ${name}`);
+  if (catalog.some(entry => path.resolve(entry.duckdb_path) === existingPath)) throw new Error(`DuckDB file is already registered as a knowledge base: ${existingPath}`);
+
+  const validation = await validateExistingKnowledgeBaseDuckDb(existingPath);
+  const sourcePath = input.source_path
+    ? (path.isAbsolute(input.source_path) ? input.source_path : path.resolve(root, input.source_path))
+    : null;
+  const entry: DbCatalogEntry = {
+    name,
+    duckdb_path: existingPath,
+    created_at: new Date().toISOString(),
+    source_path: sourcePath,
+    profile: inferKnowledgeBaseProfile({
+      name,
+      sourcePath,
+      tags: input.tags ?? [],
+      source: 'auto_inferred',
+    }),
+  };
+  await writeDbCatalog([...catalog, entry]);
+
+  return {
+    knowledge_base: { name: entry.name, duckdb_path: entry.duckdb_path, profile: entry.profile },
+    status: 'registered',
+    db: entry,
+    counts: validation.counts,
+    validation: {
+      required_tables: validation.required_tables,
+      optional_tables_present: validation.optional_tables_present,
+      missing_tables: validation.missing_tables,
+    },
+    mutation_policy: {
+      copied_duckdb_file: false,
+      ingested_documents: false,
+    },
   };
 }
 
@@ -2462,6 +2521,44 @@ async function countDocumentRecords(docId: string) {
     return {
       pages: Number(rows[0]?.pages ?? 0),
       chunks: Number(rows[0]?.chunks ?? 0),
+    };
+  } finally {
+    connection.disconnectSync();
+  }
+}
+
+async function validateExistingKnowledgeBaseDuckDb(duckdbPath: string) {
+  const instance = await DuckDBInstance.fromCache(duckdbPath);
+  const connection = await instance.connect();
+  try {
+    const tableRows = await queryRows<{ table_name: string }>(
+      connection,
+      `select table_name
+       from information_schema.tables
+       where table_schema = 'main'`,
+    );
+    const tableNames = new Set(tableRows.map(row => String(row.table_name).toLowerCase()));
+    const missingTables = requiredKnowledgeBaseTables.filter(table => !tableNames.has(table));
+    if (missingTables.length) {
+      throw new Error(`DuckDB file is not an OpenShelf knowledge base. Missing required tables: ${missingTables.join(', ')}`);
+    }
+
+    const countRows = await queryRows<{ documents: string | number; pages: string | number; chunks: string | number }>(
+      connection,
+      `select
+        (select count(*) from documents) as documents,
+        (select count(*) from pages) as pages,
+        (select count(*) from chunks) as chunks`,
+    );
+    return {
+      required_tables: requiredKnowledgeBaseTables,
+      optional_tables_present: optionalKnowledgeBaseTables.filter(table => tableNames.has(table)),
+      missing_tables: missingTables,
+      counts: {
+        documents: Number(countRows[0]?.documents ?? 0),
+        pages: Number(countRows[0]?.pages ?? 0),
+        chunks: Number(countRows[0]?.chunks ?? 0),
+      },
     };
   } finally {
     connection.disconnectSync();

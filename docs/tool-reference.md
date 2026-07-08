@@ -1,3 +1,7 @@
+# Tool Reference
+
+[Home](../README.md) · [中文首页](../README.zh-CN.md) · [Quick start](getting-started.md) · [Concepts](concepts.md) · [Search and evidence](search-and-evidence.md)
+
 ## Tool Contracts
 
 The server follows the official TypeScript SDK `McpServer.registerTool(...)` format from the npm dependency `@modelcontextprotocol/server`: each tool receives the fields below directly as its input schema.
@@ -15,9 +19,9 @@ Every tool output includes the physical knowledge-base identity:
 }
 ```
 
-This MCP server manages multiple physical DuckDB knowledge bases through `db_name`. Use `create_db` to create a new database and `list_db` to inspect the available databases. When more than one database exists, search/read tools return `status: "db_selection_required"` unless `db_name` is specified.
+This MCP server manages multiple physical DuckDB knowledge bases through `db_name`. Use `create_db` to create a new database, `create_db_from_exist` to register an existing OpenShelf DuckDB file, and `list_db` to inspect the available databases. When more than one database exists, search/read tools return `status: "db_selection_required"` unless `db_name` is specified.
 
-`openshelf` is the MCP server name and is reserved; do not use `openshelf` as a `db_name`. A fresh install starts with a default database named `default`, stored at `data/index/kb_default.duckdb`. You can create additional databases such as `research_corpus` or `textbook_corpus` with `create_db`.
+`openshelf` is the MCP server name and is reserved; do not use `openshelf` as a `db_name`. A fresh install starts with a default database named `default`, stored at `data/index/kb_default.duckdb`. You can create additional databases such as `research_corpus` or `textbook_corpus` with `create_db`, or register an existing OpenShelf DuckDB file with `create_db_from_exist`.
 
 ```json
 {
@@ -72,6 +76,25 @@ Input:
 Output includes `status: "created"`, the `db` record, the inferred knowledge-base `profile`, and per-document ingest results when `path` is provided. The profile is inferred from the concrete database name, source path, and tags; users do not need to provide allowed or forbidden methods.
 
 The profile records the usage boundary for this database. For example, a textbook corpus may be inferred as `scope_policy: "closed_corpus"` with `method_boundary: "corpus_internal"`, meaning agents should treat the selected corpus itself as the boundary and should first look for corpus-internal method evidence before using external reasoning. A research corpus such as `research_corpus` may be inferred as `scope_policy: "open_research"`, where independent reasoning is allowed only when clearly labeled and separated from cited corpus evidence.
+
+### `create_db_from_exist`
+
+Register an existing OpenShelf DuckDB file as a named knowledge base. This tool only updates the catalog: it does not copy the DuckDB file, does not ingest PDFs, and does not mutate the source database. The file must already contain the OpenShelf knowledge-base tables.
+
+Input:
+
+```json
+{
+  "db_name": "shared_corpus",
+  "duckdb_path": "/absolute/path/to/kb_shared_corpus.duckdb",
+  "source_path": "/optional/original/corpus/folder",
+  "tags": ["research"]
+}
+```
+
+`db_name` is optional. If omitted, OpenShelf infers it from the DuckDB filename, stripping a leading `kb_` or `kb-` prefix.
+
+Output includes `status: "registered"`, the catalog `db` record, document/page/chunk counts, schema validation details, and a `mutation_policy` confirming that the DuckDB file was not copied and documents were not ingested.
 
 ### `list_db`
 

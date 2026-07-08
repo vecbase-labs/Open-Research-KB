@@ -1,46 +1,41 @@
 # OpenShelf
 
-[中文说明](README.zh-CN.md)
+[简体中文](README.zh-CN.md) · [Quick start](docs/getting-started.md) · [Concepts](docs/concepts.md) · [Search and evidence](docs/search-and-evidence.md) · [Tool reference](docs/tool-reference.md)
 
-OpenShelf is a local-first MCP server for building and querying PDF knowledge bases. It indexes PDFs into DuckDB, exposes evidence-grounded retrieval tools, and helps agents separate corpus-backed answers from independent reasoning.
+OpenShelf is a local-first MCP server for building searchable knowledge bases from local folders. It indexes text-layer PDFs into DuckDB, exposes evidence-grounded retrieval tools to agents, and separates corpus-backed answers from answers that require additional reasoning.
+
+OpenShelf is designed for research papers, textbooks, technical documents, and local document libraries. It does not require a cloud vector database by default, does not upload source files, and keeps generated DuckDB files, PDF caches, and rendered page images out of the repository.
+
+## Why OpenShelf
+
+Many RAG tools blur the line between "retrieved related text" and "the corpus supports this answer." OpenShelf keeps that boundary explicit:
+
+- Build reusable DuckDB knowledge bases from local files.
+- Use explainable DuckDB-backed BM25 text retrieval by default.
+- Preserve page chunks, technical-result chunks, and source-page evidence.
+- Distinguish closed corpus and open research corpus boundaries.
+- Label results as `supported`, `related_only`, or `not_found`.
+- Share a knowledge base directly by sharing its `.duckdb` file.
 
 ## Features
 
-- Ingest PDFs with an embedded text layer into local DuckDB knowledge bases.
-- Manage multiple named databases with `db_name`.
-- Use DuckDB-backed BM25 text search by default.
-- Search chunks with conservative answerability labels: `supported`, `related_only`, and `not_found`.
-- Retrieve source chunks, page text, and rendered page images for citation checks.
-- Audit independent reasoning against closed-corpus profiles with `check_reasonable`.
-- Keep PDFs and generated indexes local; repository data directories are ignored by default.
+| Capability | Description |
+|---|---|
+| Local ingestion | Index searchable PDFs into DuckDB. |
+| Multiple databases | Manage isolated knowledge bases with `db_name`. |
+| Existing DB registration | Register an existing OpenShelf DuckDB file with `create_db_from_exist`. |
+| Text retrieval | Default `mode: "text"` uses BM25 text search. |
+| Evidence labels | Return `supported`, `related_only`, or `not_found`. |
+| Corpus boundary | Use profiles to distinguish closed corpus and open research corpus behavior. |
+| Source inspection | Fetch chunks, page text, and rendered page images. |
+| Technical index | Let users decide after ingestion whether to build theorem, lemma, definition, and proposition-oriented indexes. |
 
 ## Quick Start
 
-Install dependencies:
-
 ```bash
 npm install
-```
-
-Run the MCP server over stdio:
-
-```bash
 npm run openshelf-mcp
 ```
-
-Add a PDF:
-
-```bash
-npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title","authors":["Author"],"tags":["book"]}'
-```
-
-Run the optional smoke test with any searchable sample PDF:
-
-```bash
-KB_MCP_SMOKE_PDF=<path-to-sample.pdf> npm run smoke:pdf
-```
-
-## Codex MCP Setup
 
 Add the server to your Codex MCP config:
 
@@ -50,27 +45,28 @@ command = "npm"
 args = ["--prefix", "/path/to/OpenShelf", "run", "--silent", "openshelf-mcp"]
 ```
 
-A fresh install starts with a default database named `default`, stored at `data/index/kb_default.duckdb`. Use `create_db` if you want additional databases such as `research_corpus` or `textbook_corpus`.
+Add a searchable PDF:
 
-## Common Workflow
-
-1. Add PDFs with `create_document` or `ingest_pdf`.
-2. Search the corpus with `search` or `search_terms`.
-3. Inspect source evidence with `get_chunk`, `get_page_text`, or `get_page_image`.
-4. Answer from the corpus only when `answerability.status` is `supported`.
-5. If evidence is weak or missing, label any independent reasoning clearly and use `check_reasonable` when a closed corpus profile should constrain the answer.
-
-## PDF Ingestion Requirements
-
-By default, the system only accepts PDFs whose text can be extracted directly. LaTeX-generated papers and ebooks with an embedded text layer usually work. Scanned PDFs, image-only PDFs, and PDFs whose text cannot be copied and pasted are rejected with:
-
-```json
-{
-  "status": "rejected",
-  "index_status": "not_indexed",
-  "rejection_reason": "no_searchable_text"
-}
+```bash
+npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title","authors":["Author"],"tags":["book"]}'
 ```
+
+See [Quick start](docs/getting-started.md) for the full flow.
+
+## Recommended Workflow
+
+OpenShelf is designed for an LLM agent with MCP tools, not for users to manually execute every retrieval step. A typical flow is:
+
+1. The user names a knowledge base and asks a question in natural language, such as "Use `research_corpus` to answer this."
+2. The agent chooses `search`, `search_terms`, or `search_technical_results` based on the question.
+3. If the result is `supported`, the agent answers directly from cited evidence.
+4. If the result is `related_only` or `not_found`, the agent explains that corpus evidence is insufficient and asks whether the user allows further reasoning.
+5. If the user allows further reasoning and the corpus is closed, the agent uses `check_reasonable` to audit whether the reasoning exceeds the corpus boundary. If the corpus is open research, the agent may continue, but must label what comes from the knowledge base and what is independent reasoning.
+6. If theorem, definition, or proposition-level retrieval is needed, the agent can suggest calling `build_technical_index` on already ingested documents to generate technical-result chunks.
+
+## PDF Requirements
+
+By default, OpenShelf only accepts PDFs whose text can be extracted directly. LaTeX-generated papers and ebooks with embedded text usually work. Scanned PDFs, image-only PDFs, and PDFs whose text cannot be copied and pasted are rejected.
 
 Default settings:
 
@@ -79,112 +75,35 @@ ocr: "never"
 require_searchable: true
 ```
 
-If you need to process scanned PDFs, explicitly enable OCR:
+OCR must be explicitly enabled for scanned documents. It depends on local Tesseract and may be unreliable for formulas, tables, and complex layouts.
 
-```json
-{
-  "ocr": "auto"
-}
-```
+See [Quick start: PDF requirements](docs/getting-started.md#pdf-requirements).
 
-OCR depends on local Tesseract, and results may be unreliable for formulas, tables, and complex layouts.
-
-## Tools
+## Core Tools
 
 | Tool | Purpose |
 |---|---|
-| `create_db` | Create a named DuckDB knowledge base, optionally ingesting a PDF file or directory. |
-| `list_db` | List available databases and their profiles. |
-| `set_active_db` | Set the session default database. |
-| `create_document` | Add one searchable PDF with stricter defaults for user-facing ingestion. |
-| `ingest_pdf` | Ingest a local PDF into a selected database. |
-| `list_documents` | List indexed documents with optional title/path/tag filters. |
+| `create_db` | Create a named DuckDB knowledge base, optionally ingesting PDFs. |
+| `create_db_from_exist` | Register an existing OpenShelf DuckDB file without copying or re-ingesting it. |
+| `list_db` | List available databases and profiles. |
+| `create_document` | Add one searchable PDF, rejecting image-only PDFs by default. |
 | `search` | Search chunks and return answerability metadata. |
-| `search_terms` | Two-stage search workflow for technical/domain natural-language questions. |
-| `check_reasonable` | Check whether independent reasoning stays within a selected corpus scope. |
-| `build_technical_index` | Preview or build extracted technical-term results. |
-| `search_technical_results` | Search extracted technical-term results and nearby definitions. |
-| `get_chunk` | Fetch one chunk with optional neighbors and page image. |
-| `get_page_text` | Return extracted text for one PDF page. |
-| `get_page_image` | Render or fetch a cached page image. |
+| `search_terms` | Two-stage retrieval for technical or domain questions. |
+| `build_technical_index` | Build theorem, lemma, definition, and related technical-result indexes. |
+| `search_technical_results` | Search structured technical results. |
+| `get_chunk` / `get_page_text` / `get_page_image` | Inspect chunks, page text, and rendered pages. |
 
-See [docs/tool-reference.md](docs/tool-reference.md) for full input and output schemas.
+See [Tool reference](docs/tool-reference.md) for complete schemas.
 
-## Search Modes
+## Documentation
 
-`search` defaults to:
-
-```json
-{
-  "mode": "text"
-}
-```
-
-This means DuckDB-backed BM25 text retrieval. Supported modes:
-
-| Mode | Meaning |
+| Page | Content |
 |---|---|
-| `text` | BM25 text retrieval. This is the current default. |
-| `overlap` | Exploratory term-overlap retrieval. |
-| `hybrid` | BM25 plus term-overlap retrieval. This is not standard BM25 + vector hybrid retrieval. |
-| `semantic` | Reserved for a future LanceDB vector side index; it only participates after embeddings have been built. |
-| `vector` | Deprecated alias for `semantic`. |
-
-The stable path today is `text`. Semantic vector search and reranking are future advanced features, not default behavior.
-
-## Evidence Policy
-
-OpenShelf is intentionally conservative. A lexical hit is not automatically enough to answer a question.
-
-| Status | Meaning | Recommended agent behavior |
-|---|---|---|
-| `supported` | Direct textual evidence was found. | Answer from cited evidence. |
-| `related_only` | Weakly related material was found, but it is not enough to support the answer. | Report the limitation before independent reasoning. |
-| `not_found` | No usable evidence was found. | Ask before using independent reasoning. |
-
-## Term / Technical Result Index
-
-Regular ingestion creates:
-
-```text
-documents
-pages
-chunks
-chunk_terms
-embedding_jobs
-```
-
-If you need structured retrieval over theorem, lemma, definition, proposition, and related result objects, call `build_technical_index` separately. It creates:
-
-```text
-technical_results
-technical_result_links
-```
-
-This index is designed for theorem, definition, proposition, and proof-oriented retrieval. It should not be evaluated only with ordinary RAG gold-answer recall.
-
-## Storage
-
-Runtime data is local and ignored by Git:
-
-```text
-data/index/      DuckDB databases and database catalog
-data/pdfs/       optional local PDF staging area
-data/rendered/   cached page images
-data/test_outputs/
-```
-
-Each database is a separate DuckDB file, for example `data/index/kb_default.duckdb`. The original PDFs are not copied into the repository during ingestion; their source paths are stored in the database metadata. Page images are generated on demand and cached under `data/rendered`.
-
-Install Poppler before ingestion:
-
-```text
-pdftotext
-pdfinfo
-pdftoppm
-```
-
-If OCR is needed, install and configure Tesseract as well.
+| [Quick start](docs/getting-started.md) | Installation, MCP setup, ingestion, smoke tests, and PDF requirements. |
+| [Concepts](docs/concepts.md) | Knowledge bases, DuckDB files, closed/open profiles, page chunks, and technical-result chunks. |
+| [Search and evidence](docs/search-and-evidence.md) | BM25, search modes, answerability, and technical-result indexing. |
+| [Tool reference](docs/tool-reference.md) | MCP tool input and output schemas. |
+| [Development](docs/development.md) | Local data, tests, and Git ignore policy. |
 
 ## Development
 
@@ -193,4 +112,13 @@ npm run typecheck
 npm run test:unit
 ```
 
-The repository intentionally excludes generated PDFs, images, DuckDB files, rendered pages, logs, local environments, and `node_modules`.
+Runtime data stays local and is ignored by Git:
+
+```text
+data/index/        DuckDB databases and catalog
+data/pdfs/         optional PDF staging area
+data/rendered/     rendered page cache
+data/test_outputs/ test outputs
+```
+
+Next: [Quick start](docs/getting-started.md)

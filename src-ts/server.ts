@@ -6,6 +6,7 @@ import {
   buildTechnicalIndex,
   checkReasonable,
   createDb,
+  createDbFromExist,
   getChunk,
   getPageText,
   ingestPdf,
@@ -48,6 +49,21 @@ function createServer(): McpServer {
       }),
     },
     async input => jsonText(await createDb(input)),
+  );
+
+  server.registerTool(
+    'create_db_from_exist',
+    {
+      title: 'Create DB From Existing DuckDB',
+      description: 'Register an existing OpenShelf DuckDB file as a named knowledge base. This does not copy the file or ingest documents.',
+      inputSchema: z.object({
+        db_name: z.string().nullable().default(null).describe('Knowledge-base name. If omitted, inferred from the DuckDB filename.'),
+        duckdb_path: z.string().describe('Absolute path, or path relative to the repository root, to an existing OpenShelf .duckdb file.'),
+        source_path: z.string().nullable().default(null).describe('Optional original corpus path recorded as metadata.'),
+        tags: z.array(z.string()).default([]).describe('Optional tags used to infer the knowledge-base profile.'),
+      }),
+    },
+    async input => jsonText(await createDbFromExist(input)),
   );
 
   server.registerTool(
