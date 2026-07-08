@@ -262,7 +262,7 @@ export async function ingestPdf(input: {
   const ocrLanguage = input.ocr_language ?? 'eng';
   const ocrDpi = input.ocr_dpi ?? 220;
   const ocrMaxPages = input.ocr_max_pages ?? null;
-  const requireSearchable = input.require_searchable ?? false;
+  const requireSearchable = input.require_searchable ?? true;
   const ingestTempDir = await fs.mkdtemp(path.join(os.tmpdir(), `kb-mcp-${slugify(docId)}-${fileSha256.slice(0, 8)}-`));
 
   try {
@@ -542,7 +542,7 @@ export async function createDb(input: {
         db_name: name,
         pdf_path: pdfPath,
         tags: input.tags ?? [],
-        ocr: input.ocr ?? 'auto',
+        ocr: input.ocr ?? 'never',
         ocr_language: input.ocr_language,
         ocr_dpi: input.ocr_dpi,
         ocr_max_pages: input.ocr_max_pages,
@@ -649,7 +649,7 @@ export async function search(input: {
   return withSelectedDb(input.db_name ?? null, async selection => {
   if (selection.required) return selection.response;
   const index = await loadIndex();
-  const requestedMode = input.mode ?? 'hybrid';
+  const requestedMode = input.mode ?? 'text';
   const mode = requestedMode === 'vector' ? 'semantic' : requestedMode;
   const retrievalProfile = input.retrieval_profile ?? 'strict_evidence';
   const strict = input.strict ?? retrievalProfile === 'strict_evidence';
@@ -855,7 +855,7 @@ export async function searchTerms(input: {
   for (const query of suggestedQueries) {
     queryResults.push(await search({
       query,
-      mode: 'hybrid',
+      mode: 'text',
       retrieval_profile: 'strict_evidence',
       top_k: perQueryTopK,
       db_name: input.db_name ?? null,
@@ -917,7 +917,7 @@ export async function searchTerms(input: {
   for (const query of methodCheckQueries) {
     methodQueryResults.push(await search({
       query,
-      mode: 'hybrid',
+      mode: 'text',
       retrieval_profile: 'strict_evidence',
       top_k: perQueryTopK,
       db_name: input.db_name ?? null,
@@ -1075,7 +1075,7 @@ export async function checkReasonable(input: {
   for (const query of technicalQueries) {
     queryResults.push(await search({
       query,
-      mode: 'hybrid',
+      mode: 'text',
       retrieval_profile: 'strict_evidence',
       top_k: perQueryTopK,
       db_name: input.db_name ?? null,

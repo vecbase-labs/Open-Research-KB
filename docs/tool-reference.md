@@ -60,7 +60,7 @@ Input:
   "db_name": "textbook_corpus",
   "path": "<path-to-pdf-directory-or-file>",
   "tags": ["textbook"],
-  "ocr": "auto",
+  "ocr": "never",
   "ocr_language": "eng",
   "ocr_dpi": 220,
   "ocr_max_pages": null,
@@ -119,7 +119,7 @@ Input:
 
 ### `create_document`
 
-Recommended tool for adding a new local PDF to the knowledge base. It accepts searchable text PDFs, creates document metadata, page text records, chunk records, lexical term index rows, and embedding job rows in DuckDB. It does not copy the source PDF into the repository. OCR is optional and uses local Tesseract if installed.
+Recommended tool for adding a new local PDF to the knowledge base. It accepts searchable text PDFs, creates document metadata, page text records, chunk records, lexical term index rows, and embedding job rows in DuckDB. By default OCR is off, so scanned/image-only PDFs without an embedded text layer are rejected instead of silently indexed as empty documents.
 
 `ocr` options:
 
@@ -131,7 +131,7 @@ Recommended tool for adding a new local PDF to the knowledge base. It accepts se
 
 If a PDF produces no searchable text chunks, `create_document` rejects it and does not add it to the knowledge base. This usually means the PDF is scanned/image-only and needs a working OCR pipeline before ingestion.
 
-The input and output schema is the same as `ingest_pdf`, with `ocr` defaulting to `auto` and `require_searchable` defaulting to `true`.
+The input and output schema is the same as `ingest_pdf`, with `ocr` defaulting to `never` and `require_searchable` defaulting to `true`.
 
 ### `ingest_pdf`
 
@@ -154,7 +154,7 @@ Input:
   "ocr_language": "eng",
   "ocr_dpi": 220,
   "ocr_max_pages": null,
-  "require_searchable": false
+  "require_searchable": true
 }
 ```
 
@@ -175,7 +175,7 @@ Fields:
 | `ocr_language` | string | no | `eng` | Tesseract language code. |
 | `ocr_dpi` | integer | no | `220` | DPI for page images sent to OCR. |
 | `ocr_max_pages` | integer or null | no | null | Optional cap on OCR pages. |
-| `require_searchable` | boolean | no | `false` | When true, reject and do not index PDFs that produce no searchable text chunks. `create_document` defaults this to `true`. |
+| `require_searchable` | boolean | no | `true` | Reject and do not index PDFs that produce no searchable text chunks. |
 
 Output:
 
@@ -278,7 +278,7 @@ Output:
 
 ### `search`
 
-Search chunks using DuckDB-backed BM25 text retrieval and optional term-overlap retrieval. Semantic retrieval is represented as a LanceDB side-index mode, but it only participates after embeddings have been generated and synced.
+Search chunks using DuckDB-backed BM25 text retrieval by default. Optional modes include term-overlap retrieval and reserved semantic retrieval; semantic retrieval only participates after embeddings have been generated and synced.
 
 Default search is deliberately conservative. `answerability.status` is fixed to three product states:
 
@@ -310,7 +310,7 @@ Input:
 ```json
 {
   "query": "fixed point theorem",
-  "mode": "hybrid",
+  "mode": "text",
   "top_k": 8,
   "filters": {
     "doc_id": null,
@@ -327,7 +327,7 @@ Fields:
 | Field | Type | Required | Default | Meaning |
 |---|---:|---:|---:|---|
 | `query` | string | yes | - | Natural-language or keyword query. |
-| `mode` | enum | no | `hybrid` | One of `hybrid`, `text`, `overlap`, or `semantic`. Deprecated `vector` is treated as `semantic`. |
+| `mode` | enum | no | `text` | One of `text`, `hybrid`, `overlap`, or `semantic`. Deprecated `vector` is treated as `semantic`. |
 | `top_k` | integer | no | `8` | Maximum number of results. Range: 1-50. |
 | `filters.doc_id` | string or null | no | null | Restrict to one document. |
 | `filters.tags` | string[] or null | no | null | Require every listed document tag. |
@@ -340,7 +340,7 @@ Output:
 ```json
 {
   "query": "fixed point theorem",
-  "mode": "hybrid",
+  "mode": "text",
   "results": [
     {
       "chunk_id": "book-title-a1b2c3d4e5:p12:c0",
@@ -349,7 +349,7 @@ Output:
       "page": 12,
       "score": 1.5,
       "bm25_score": 10.02,
-      "match_type": "hybrid",
+      "match_type": "text",
       "citation": "Author A, Book Title, p. 12",
       "text": "...",
       "context": []
@@ -363,7 +363,7 @@ When `strict` is true and no evidence is found, output has empty results:
 ```json
 {
   "query": "di-martingale terminal hitting set",
-  "mode": "hybrid",
+  "mode": "text",
   "strict": true,
   "results": [],
   "answerability": {
@@ -388,7 +388,7 @@ When only partial terms are found, the tool reports partial evidence but does no
 ```json
 {
   "query": "assignment dimartingale",
-  "mode": "hybrid",
+  "mode": "text",
   "strict": true,
   "results": [],
   "partial_results": [

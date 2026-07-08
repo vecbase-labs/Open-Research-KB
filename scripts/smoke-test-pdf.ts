@@ -111,7 +111,7 @@ async function main() {
 
     const searchOutput = await call(client, 'search', {
       query: pageTextOutput.text.slice(0, 120),
-      mode: 'hybrid',
+      mode: 'text',
       top_k: 5,
       filters: { doc_id: docId, tags: ['sample'] },
       context_window: 1,

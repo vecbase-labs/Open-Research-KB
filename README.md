@@ -28,7 +28,7 @@ npm run kb-mcp-ts
 Add a PDF:
 
 ```bash
-npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title","authors":["Author"],"tags":["book"],"ocr":"auto"}'
+npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title","authors":["Author"],"tags":["book"]}'
 ```
 
 Run the optional smoke test with any searchable sample PDF:
