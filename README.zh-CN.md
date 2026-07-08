@@ -1,6 +1,6 @@
 # OpenShelf
 
-[English](README.md) · [快速开始](docs/getting-started.zh-CN.md) · [核心概念](docs/concepts.zh-CN.md) · [检索与证据](docs/search-and-evidence.zh-CN.md) · [工具参考](docs/tool-reference.md)
+[English](README.md) · [Codex 插件](#codex-插件) · [Claude Code 插件](#claude-code-插件) · [快速开始](docs/getting-started.zh-CN.md) · [核心概念](docs/concepts.zh-CN.md) · [检索与证据](docs/search-and-evidence.zh-CN.md) · [工具参考](docs/tool-reference.md)
 
 OpenShelf 是一个本地优先的 MCP 服务器，用于从本地文件夹构建可查询知识库。它把带文本层的 PDF 索引到 DuckDB 中，向智能体提供证据约束的检索工具，并帮助区分“知识库直接支持的回答”和“需要额外推理的回答”。
 
@@ -55,6 +55,47 @@ npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title
 ```
 
 完整步骤见 [快速开始](docs/getting-started.zh-CN.md)。
+
+## Codex 插件
+
+本仓库本身也是一个 Codex 插件根目录，包含：
+
+```text
+.codex-plugin/plugin.json  插件 manifest
+.mcp.json                  OpenShelf MCP server 配置
+skills/openshelf/          Codex 使用 OpenShelf 的 agent 指南
+.agents/plugins/           本地 marketplace 配置
+```
+
+本地安装方式：
+
+```bash
+codex plugin marketplace add /path/to/OpenShelf
+codex plugin add openshelf@openshelf-local
+```
+
+安装后新开一个 Codex thread，让 Codex 加载插件提供的 OpenShelf MCP 工具。
+
+插件模式下，OpenShelf 默认把知识库数据保存在 `~/.openshelf/data`，不会写入 Codex 插件缓存目录。已有 `.duckdb` 文件可以用 `create_db_from_exist` 注册进插件使用的 catalog。
+
+## Claude Code 插件
+
+本仓库也支持 Claude Code 插件结构，包含：
+
+```text
+.claude-plugin/plugin.json       Claude Code 插件 manifest
+.claude-plugin/marketplace.json  Claude Code 本地 marketplace
+.mcp.json                        Claude Code 加载的 OpenShelf MCP server
+```
+
+本地安装方式：
+
+```bash
+claude plugin marketplace add /path/to/OpenShelf
+claude plugin install openshelf@openshelf-local
+```
+
+安装后重启 Claude Code 或开启新会话。Claude Code 会导入名为 `openshelf` 的 MCP server。插件数据默认保存在 Claude 的 `${CLAUDE_PLUGIN_DATA}/data` 中；已有 `.duckdb` 文件可以用 `create_db_from_exist` 注册。
 
 ## 推荐工作流
 

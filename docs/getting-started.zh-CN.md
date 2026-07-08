@@ -45,7 +45,41 @@ db_name: default
 duckdb_path: data/index/kb_default.duckdb
 ```
 
-## 4. 创建或注册知识库
+## 4. 作为 Codex 插件安装
+
+OpenShelf 也可以作为 Codex 插件安装。插件 manifest 位于 `.codex-plugin/plugin.json`，MCP server 配置位于 `.mcp.json`。
+
+本地安装：
+
+```bash
+codex plugin marketplace add /path/to/OpenShelf
+codex plugin add openshelf@openshelf-local
+```
+
+安装后新开 Codex thread，让 Codex 重新加载插件提供的 skill 和 MCP tools。
+
+插件模式下默认数据目录是：
+
+```text
+~/.openshelf/data
+```
+
+这可以避免知识库写入 Codex 的插件缓存目录。如果你已有 OpenShelf `.duckdb` 文件，在新对话里让 agent 调用 `create_db_from_exist` 注册即可。
+
+## 5. 作为 Claude Code 插件安装
+
+OpenShelf 也支持 Claude Code 插件。Claude Code 使用 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和根目录 `.mcp.json`。
+
+本地安装：
+
+```bash
+claude plugin marketplace add /path/to/OpenShelf
+claude plugin install openshelf@openshelf-local
+```
+
+安装后重启 Claude Code 或开启新会话。Claude Code 会导入名为 `openshelf` 的 MCP server。
+
+## 6. 创建或注册知识库
 
 创建新知识库：
 
@@ -68,7 +102,7 @@ duckdb_path: data/index/kb_default.duckdb
 
 `create_db_from_exist` 只更新 catalog，不复制 DuckDB 文件，也不重新入库 PDF。
 
-## 5. 添加一个 PDF
+## 7. 添加一个 PDF
 
 命令行方式：
 
@@ -89,7 +123,7 @@ MCP 工具方式：
 
 如果有多个知识库，调用检索或入库工具时应显式传入 `db_name`。
 
-## 6. 运行 smoke test
+## 8. 运行 smoke test
 
 使用任意可搜索文本 PDF：
 

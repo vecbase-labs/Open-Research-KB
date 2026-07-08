@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "openshelf": {
+      "command": "node",
+      "args": [
+        "./scripts/openshelf-plugin-mcp.mjs"
+      ],
+      "cwd": "."
+    }
+  }
+}

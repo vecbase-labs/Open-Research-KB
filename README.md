@@ -1,6 +1,6 @@
 # OpenShelf
 
-[简体中文](README.zh-CN.md) · [Quick start](docs/getting-started.md) · [Concepts](docs/concepts.md) · [Search and evidence](docs/search-and-evidence.md) · [Tool reference](docs/tool-reference.md)
+[简体中文](README.zh-CN.md) · [Codex plugin](#codex-plugin) · [Claude Code plugin](#claude-code-plugin) · [Quick start](docs/getting-started.md) · [Concepts](docs/concepts.md) · [Search and evidence](docs/search-and-evidence.md) · [Tool reference](docs/tool-reference.md)
 
 OpenShelf is a local-first MCP server for building searchable knowledge bases from local folders. It indexes text-layer PDFs into DuckDB, exposes evidence-grounded retrieval tools to agents, and separates corpus-backed answers from answers that require additional reasoning.
 
@@ -52,6 +52,47 @@ npm run create-document -- '{"pdf_path":"<path-to-book.pdf>","title":"Book Title
 ```
 
 See [Quick start](docs/getting-started.md) for the full flow.
+
+## Codex Plugin
+
+This repository is also a Codex plugin root. It contains:
+
+```text
+.codex-plugin/plugin.json  plugin manifest
+.mcp.json                  OpenShelf MCP server config
+skills/openshelf/          agent guidance for using OpenShelf
+.agents/plugins/           local marketplace config
+```
+
+Local installation:
+
+```bash
+codex plugin marketplace add /path/to/OpenShelf
+codex plugin add openshelf@openshelf-local
+```
+
+Start a new Codex thread after installation so Codex loads the OpenShelf MCP tools from the plugin.
+
+In plugin mode, OpenShelf stores knowledge-base data under `~/.openshelf/data` by default, not inside the Codex plugin cache. Existing `.duckdb` files can be registered into that catalog with `create_db_from_exist`.
+
+## Claude Code Plugin
+
+This repository also supports the Claude Code plugin layout:
+
+```text
+.claude-plugin/plugin.json       Claude Code plugin manifest
+.claude-plugin/marketplace.json  Claude Code local marketplace
+.mcp.json                        OpenShelf MCP server loaded by Claude Code
+```
+
+Local installation:
+
+```bash
+claude plugin marketplace add /path/to/OpenShelf
+claude plugin install openshelf@openshelf-local
+```
+
+Restart Claude Code or start a new session after installation. Claude Code imports the MCP server named `openshelf`. Plugin data is stored under Claude's `${CLAUDE_PLUGIN_DATA}/data` by default; existing `.duckdb` files can be registered with `create_db_from_exist`.
 
 ## Recommended Workflow
 

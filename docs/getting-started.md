@@ -45,7 +45,41 @@ db_name: default
 duckdb_path: data/index/kb_default.duckdb
 ```
 
-## 4. Create or Register a Knowledge Base
+## 4. Install as a Codex Plugin
+
+OpenShelf can also be installed as a Codex plugin. The plugin manifest is `.codex-plugin/plugin.json`, and the MCP server config is `.mcp.json`.
+
+Local installation:
+
+```bash
+codex plugin marketplace add /path/to/OpenShelf
+codex plugin add openshelf@openshelf-local
+```
+
+Start a new Codex thread after installation so Codex reloads the plugin skill and MCP tools.
+
+Plugin mode uses this data directory by default:
+
+```text
+~/.openshelf/data
+```
+
+This avoids writing knowledge bases into the Codex plugin cache. If you already have an OpenShelf `.duckdb` file, ask the agent to register it with `create_db_from_exist` in a new conversation.
+
+## 5. Install as a Claude Code Plugin
+
+OpenShelf also supports Claude Code plugins. Claude Code uses `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and the root `.mcp.json`.
+
+Local installation:
+
+```bash
+claude plugin marketplace add /path/to/OpenShelf
+claude plugin install openshelf@openshelf-local
+```
+
+Restart Claude Code or start a new session after installation. Claude Code imports the MCP server named `openshelf`.
+
+## 6. Create or Register a Knowledge Base
 
 Create a new knowledge base:
 
@@ -68,7 +102,7 @@ Register an existing OpenShelf DuckDB file:
 
 `create_db_from_exist` only updates the catalog. It does not copy the DuckDB file or re-ingest PDFs.
 
-## 5. Add a PDF
+## 7. Add a PDF
 
 Command line:
 
@@ -89,7 +123,7 @@ MCP tool input:
 
 If multiple databases exist, pass `db_name` explicitly when ingesting or searching.
 
-## 6. Run the Smoke Test
+## 8. Run the Smoke Test
 
 Use any searchable text PDF:
 

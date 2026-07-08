@@ -1,0 +1,42 @@
+{
+  "name": "openshelf",
+  "version": "0.1.1",
+  "description": "Local-first DuckDB knowledge-base retrieval tools for Codex.",
+  "author": {
+    "name": "vecbase-labs",
+    "url": "https://github.com/vecbase-labs"
+  },
+  "homepage": "https://github.com/vecbase-labs/Open-Research-KB",
+  "repository": "https://github.com/vecbase-labs/Open-Research-KB",
+  "license": "MIT",
+  "keywords": [
+    "openshelf",
+    "mcp",
+    "duckdb",
+    "knowledge-base",
+    "rag",
+    "pdf"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "OpenShelf",
+    "shortDescription": "Local DuckDB knowledge-base retrieval for Codex",
+    "longDescription": "OpenShelf lets Codex build and query local PDF knowledge bases with DuckDB-backed BM25 retrieval, evidence labels, page inspection, optional technical-result indexing, and closed/open corpus reasoning boundaries.",
+    "developerName": "vecbase-labs",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Interactive"
+    ],
+    "websiteURL": "https://github.com/vecbase-labs/Open-Research-KB",
+    "defaultPrompt": [
+      "Use my OpenShelf knowledge base to answer this",
+      "Create a local knowledge base from this PDF folder",
+      "Search theorem and definition chunks in OpenShelf"
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}

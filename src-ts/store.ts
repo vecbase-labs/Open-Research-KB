@@ -11,7 +11,9 @@ import { DuckDBInstance } from '@duckdb/node-api';
 const execFileAsync = promisify(execFile);
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const dataDir = path.join(root, 'data');
+const dataDir = process.env.OPENSHELF_DATA_DIR
+  ? path.resolve(process.env.OPENSHELF_DATA_DIR)
+  : path.join(root, 'data');
 const indexDir = path.join(dataDir, 'index');
 const renderDir = path.join(dataDir, 'rendered');
 export const duckDbPath = process.env.KB_MCP_DUCKDB_PATH

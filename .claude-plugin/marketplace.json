@@ -1,0 +1,16 @@
+{
+  "name": "openshelf-local",
+  "metadata": {
+    "description": "Local OpenShelf plugin marketplace for DuckDB-backed knowledge-base retrieval."
+  },
+  "owner": {
+    "name": "vecbase-labs"
+  },
+  "plugins": [
+    {
+      "name": "openshelf",
+      "source": "./",
+      "description": "Local-first DuckDB knowledge-base retrieval tools for Claude Code."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "openshelf",
+  "version": "0.1.1",
+  "description": "Local-first DuckDB knowledge-base retrieval tools for Claude Code.",
+  "author": {
+    "name": "vecbase-labs",
+    "url": "https://github.com/vecbase-labs"
+  },
+  "homepage": "https://github.com/vecbase-labs/Open-Research-KB",
+  "repository": "https://github.com/vecbase-labs/Open-Research-KB",
+  "license": "MIT",
+  "keywords": [
+    "openshelf",
+    "mcp",
+    "duckdb",
+    "knowledge-base",
+    "rag",
+    "pdf"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}
