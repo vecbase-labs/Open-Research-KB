@@ -263,7 +263,7 @@ export async function ingestPdf(input: {
   const ocrDpi = input.ocr_dpi ?? 220;
   const ocrMaxPages = input.ocr_max_pages ?? null;
   const requireSearchable = input.require_searchable ?? true;
-  const ingestTempDir = await fs.mkdtemp(path.join(os.tmpdir(), `kb-mcp-${slugify(docId)}-${fileSha256.slice(0, 8)}-`));
+  const ingestTempDir = await fs.mkdtemp(path.join(os.tmpdir(), `openshelf-${slugify(docId)}-${fileSha256.slice(0, 8)}-`));
 
   try {
     const initialIndex = await loadIndex();

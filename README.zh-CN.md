@@ -1,8 +1,8 @@
-# Open Research KB
+# OpenShelf
 
 [English README](README.md)
 
-Open Research KB 是一个本地优先的 MCP 服务器，用于从 PDF 构建和查询知识库。它把可搜索 PDF 索引到 DuckDB 中，向智能体暴露带证据约束的检索工具，并帮助区分“知识库中有依据的回答”和“独立推理”。
+OpenShelf 是一个本地优先的 MCP 服务器，用于从 PDF 构建和查询知识库。它把可搜索 PDF 索引到 DuckDB 中，向智能体暴露带证据约束的检索工具，并帮助区分“知识库中有依据的回答”和“独立推理”。
 
 ## 功能
 
@@ -25,7 +25,7 @@ npm install
 通过 stdio 启动 MCP 服务器：
 
 ```bash
-npm run kb-mcp-ts
+npm run openshelf-mcp
 ```
 
 添加一个 PDF：
@@ -45,9 +45,9 @@ KB_MCP_SMOKE_PDF=<path-to-sample.pdf> npm run smoke:pdf
 把服务器加入 Codex MCP 配置：
 
 ```toml
-[mcp_servers.kb]
+[mcp_servers.openshelf]
 command = "npm"
-args = ["--prefix", "/path/to/ResearchKB", "run", "--silent", "kb-mcp-ts"]
+args = ["--prefix", "/path/to/OpenShelf", "run", "--silent", "openshelf-mcp"]
 ```
 
 全新安装会自动使用名为 `default` 的默认知识库，路径为 `data/index/kb_default.duckdb`。如果需要多个知识库，可以用 `create_db` 创建，例如 `research_corpus` 或 `textbook_corpus`。
@@ -134,7 +134,7 @@ OCR 依赖本地 Tesseract，且对公式、表格和复杂排版的效果可能
 
 ## 证据策略
 
-Open Research KB 有意采用保守策略。词面命中不等于可以直接回答。
+OpenShelf 有意采用保守策略。词面命中不等于可以直接回答。
 
 | 状态 | 含义 | 推荐智能体行为 |
 |---|---|---|

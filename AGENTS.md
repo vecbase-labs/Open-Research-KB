@@ -10,7 +10,7 @@ If direct evidence is not found, say so plainly. Only use independent reasoning 
 
 ## Multiple Knowledge Databases
 
-This project can manage multiple physical DuckDB knowledge bases with a single MCP server. Different corpora are selected by `db_name`; `kb` is the MCP server name and must not be used as a database name.
+This project can manage multiple physical DuckDB knowledge bases with a single MCP server. Different corpora are selected by `db_name`; `openshelf` is the MCP server name and must not be used as a database name.
 
 General workflow:
 

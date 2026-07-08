@@ -17,7 +17,7 @@ Every tool output includes the physical knowledge-base identity:
 
 This MCP server manages multiple physical DuckDB knowledge bases through `db_name`. Use `create_db` to create a new database and `list_db` to inspect the available databases. When more than one database exists, search/read tools return `status: "db_selection_required"` unless `db_name` is specified.
 
-`kb` is the MCP server name and is reserved; do not use `kb` as a `db_name`. A fresh install starts with a default database named `default`, stored at `data/index/kb_default.duckdb`. You can create additional databases such as `research_corpus` or `textbook_corpus` with `create_db`.
+`openshelf` is the MCP server name and is reserved; do not use `openshelf` as a `db_name`. A fresh install starts with a default database named `default`, stored at `data/index/kb_default.duckdb`. You can create additional databases such as `research_corpus` or `textbook_corpus` with `create_db`.
 
 ```json
 {

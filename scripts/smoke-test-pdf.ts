@@ -54,13 +54,13 @@ async function main() {
   await fs.rm(`${smokeDbPath}.wal`, { force: true });
   await fs.rm(smokeCatalogPath, { force: true });
 
-  const client = new Client({ name: 'kb-smoke-test', version: '0.1.0' });
+  const client = new Client({ name: 'openshelf-smoke-test', version: '0.1.0' });
   const transport = new StdioClientTransport({
     command: process.env.npm_execpath ?? 'npm',
-    args: ['--prefix', root, 'run', '--silent', 'kb-mcp-ts'],
+    args: ['--prefix', root, 'run', '--silent', 'openshelf-mcp'],
     env: {
       ...process.env,
-      KB_MCP_NAME: 'kb_smoke',
+      KB_MCP_NAME: 'openshelf_smoke',
       KB_MCP_DUCKDB_PATH: smokeDbPath,
       KB_MCP_CATALOG_PATH: smokeCatalogPath,
       KB_MCP_DEFAULT_DB_NAME: 'default',

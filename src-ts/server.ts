@@ -26,7 +26,7 @@ function jsonText(value: unknown) {
 
 function createServer(): McpServer {
   const server = new McpServer({
-    name: 'kb',
+    name: 'openshelf',
     version: '0.1.0',
   });
 
@@ -54,7 +54,7 @@ function createServer(): McpServer {
     'list_db',
     {
       title: 'List DB',
-      description: 'List all DuckDB knowledge bases managed by this single kb MCP server.',
+      description: 'List all DuckDB knowledge bases managed by this single OpenShelf MCP server.',
       inputSchema: z.object({}),
     },
     async () => jsonText(await listDb()),
@@ -333,4 +333,4 @@ const handle = serveStdio(createServer);
 process.on('SIGINT', () => {
   void handle.close();
 });
-console.error('kb TypeScript server running on stdio');
+console.error('OpenShelf MCP server running on stdio');

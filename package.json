@@ -1,10 +1,10 @@
 {
-  "name": "kb-mcp",
+  "name": "openshelf",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "kb-mcp-ts": "tsx src-ts/server.ts",
+    "openshelf-mcp": "tsx src-ts/server.ts",
     "typecheck": "tsc --noEmit",
     "test:unit": "tsx --test tests/*.test.ts",
     "test:incremental": "KB_MCP_DUCKDB_PATH=data/test_outputs/incremental-kb.duckdb tsx scripts/incremental-ingest-test.ts",

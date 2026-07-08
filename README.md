@@ -1,8 +1,8 @@
-# Open Research KB
+# OpenShelf
 
 [中文说明](README.zh-CN.md)
 
-Open Research KB is a local-first MCP server for building and querying PDF knowledge bases. It indexes PDFs into DuckDB, exposes evidence-grounded retrieval tools, and helps agents separate corpus-backed answers from independent reasoning.
+OpenShelf is a local-first MCP server for building and querying PDF knowledge bases. It indexes PDFs into DuckDB, exposes evidence-grounded retrieval tools, and helps agents separate corpus-backed answers from independent reasoning.
 
 ## Features
 
@@ -25,7 +25,7 @@ npm install
 Run the MCP server over stdio:
 
 ```bash
-npm run kb-mcp-ts
+npm run openshelf-mcp
 ```
 
 Add a PDF:
@@ -45,9 +45,9 @@ KB_MCP_SMOKE_PDF=<path-to-sample.pdf> npm run smoke:pdf
 Add the server to your Codex MCP config:
 
 ```toml
-[mcp_servers.kb]
+[mcp_servers.openshelf]
 command = "npm"
-args = ["--prefix", "/path/to/ResearchKB", "run", "--silent", "kb-mcp-ts"]
+args = ["--prefix", "/path/to/OpenShelf", "run", "--silent", "openshelf-mcp"]
 ```
 
 A fresh install starts with a default database named `default`, stored at `data/index/kb_default.duckdb`. Use `create_db` if you want additional databases such as `research_corpus` or `textbook_corpus`.
@@ -134,7 +134,7 @@ The stable path today is `text`. Semantic vector search and reranking are future
 
 ## Evidence Policy
 
-Open Research KB is intentionally conservative. A lexical hit is not automatically enough to answer a question.
+OpenShelf is intentionally conservative. A lexical hit is not automatically enough to answer a question.
 
 | Status | Meaning | Recommended agent behavior |
 |---|---|---|

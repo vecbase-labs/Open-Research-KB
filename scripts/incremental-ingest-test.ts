@@ -29,7 +29,7 @@ async function run() {
   await fs.rm(duckDbPath, { force: true });
   const pdfPath = await resolveOtPdfPath();
   await fs.copyFile(pdfPath, secondPdfPath);
-  await fs.appendFile(secondPdfPath, '\n% kb incremental ingest test variant\n');
+  await fs.appendFile(secondPdfPath, '\n% OpenShelf incremental ingest test variant\n');
 
   const first = await ingestPdf({
     pdf_path: pdfPath,
